@@ -1,0 +1,28 @@
+name: proxy-ticket-lab
+
+services:
+  tickets:
+    build: .
+    environment:
+      INSTANCE_NAME: tickets-1
+    # No host port is needed: the client uses the Compose network.
+
+  client:
+    image: curlimages/curl:8.21.0
+    profiles: ["tools"]
+    # The image already uses curl as its entry point.
+    command:
+      - "--silent"
+      - "--show-error"
+      - "--include"
+      - "--fail-with-body"
+      - "--connect-timeout"
+      - "3"
+      - "--max-time"
+      - "5"
+      # Explicit direct access, even if proxy environment variables exist.
+      - "--noproxy"
+      - "*"
+      - "--header"
+      - "X-Experiment: baseline-1"
+      - "http://tickets:4567/tickets"
