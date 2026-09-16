@@ -8,7 +8,7 @@ class TicketApp < Sinatra::Base
   set :instance_name, ENV.fetch("INSTANCE_NAME", "tickets-1")
 
   # "tickets" is the hostname our client uses on the Compose network.
-  set :host_authorization, { permitted_hosts: ["tickets", "localhost"] }
+  set :host_authorization, { permitted_hosts: ["tickets", "localhost", "nginx"] }
 
   before do
     content_type :json
