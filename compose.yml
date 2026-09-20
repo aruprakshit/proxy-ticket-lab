@@ -20,9 +20,32 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     # All requests stay on the Compose network; no host port is needed.
 
+  squid:
+    build: ./squid
+    # No host port: only containers on this network use the proxy.
+  client_proxied:
+    image: curlimages/curl:8.21.0
+    profiles: [ "tools" ]
+    command:
+      - "--silent"
+      - "--show-error"
+      - "--include"
+      - "--fail-with-body"
+      - "--connect-timeout"
+      - "3"
+      - "--max-time"
+      - "10"
+      - "--proxy"
+      - "http://squid:3128"
+      # An empty bypass list ensures this request uses the proxy.
+      - "--noproxy"
+      - ""
+      - "--header"
+      - "X-Experiment: forward-1"
+      - "http://nginx${REQUEST_PATH:-/tickets}"
   client:
     image: curlimages/curl:8.21.0
-    profiles: ["tools"]
+    profiles: [ "tools" ]
     command:
       - "--silent"
       - "--show-error"
