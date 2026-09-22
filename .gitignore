@@ -1,2 +1,4 @@
 *.swp
 lessons
+# Locally generated lab certificates and private keys
+/tls/generated/

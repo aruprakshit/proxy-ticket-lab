@@ -21,6 +21,8 @@ services:
     volumes:
       # Keep proxy configuration in the repository.
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./tls/generated/server.crt:/etc/nginx/tls/server.crt:ro
+      - ./tls/generated/server.key:/etc/nginx/tls/server.key:ro
     # All requests stay on the Compose network; no host port is needed.
     networks:
       website_net:
@@ -77,6 +79,38 @@ services:
       - "http://nginx${REQUEST_PATH:-/tickets}"
     networks:
       - client_net
+  certgen:
+    build: ./tls
+    profiles: ["tools"]
+    user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
+    network_mode: none
+    volumes:
+      - ./tls:/work
+
+  client_tls_check:
+    image: curlimages/curl:8.21.0
+    profiles: ["tools"]
+    # Diagnostic access from the website side, not the employee network.
+    networks:
+      - website_net
+    volumes:
+      - ./tls/generated/ca.crt:/certs/ca.crt:ro
+    command:
+      - "--verbose"
+      - "--fail-with-body"
+      - "--connect-timeout"
+      - "3"
+      - "--max-time"
+      - "10"
+      - "--proxy"
+      - ""
+      - "--noproxy"
+      - "*"
+      - "--cacert"
+      - "/certs/ca.crt"
+      - "--header"
+      - "X-Experiment: tls-baseline"
+      - "https://approved.test/tickets"
 networks:
   client_net:
     internal: true
